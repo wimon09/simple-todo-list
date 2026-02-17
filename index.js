@@ -73,9 +73,11 @@ app.post('/api/todos', (req, res) => {
   }
 });
 
-// Toggle todo completion
+// Update todo (edit text or toggle completed)
 app.put('/api/todos/:id', (req, res) => {
   const id = parseInt(req.params.id);
+  const { text } = req.body;
+
   const todos = readTodos();
   const todoIndex = todos.findIndex(t => t.id === id);
 
@@ -83,16 +85,24 @@ app.put('/api/todos/:id', (req, res) => {
     return res.status(404).json({ error: 'Todo not found' });
   }
 
-  // ✅ Toggle ค่า
-  todos[todoIndex].completed = !todos[todoIndex].completed;
-
-  // ✅ บันทึกลงไฟล์
+  // 🔹 ถ้ามี text → แก้ข้อความ
+  if (text !== undefined) {
+    if (!text.trim()) {
+      return res.status(400).json({ error: 'Todo text cannot be empty' });
+    }
+    todos[todoIndex].text = text.trim();
+  } 
+  // 🔹 ถ้าไม่มี text → toggle completed
+  else {
+    todos[todoIndex].completed = !todos[todoIndex].completed;
+  }
   if (writeTodos(todos)) {
     res.json(todos[todoIndex]);
   } else {
     res.status(500).json({ error: 'Failed to update todo' });
   }
 });
+
 
 // Delete a todo
 app.delete('/api/todos/:id', (req, res) => {
